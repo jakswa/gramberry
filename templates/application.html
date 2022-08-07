@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <title>{% block pagetitle %}{% endblock %} - Gramberry</title>
+  <style type="text/css">
+    body {
+      background: black;
+      margin: 40px auto;
+      max-width: 650px;
+      line-height: 1.6;
+      font-size: 18px;
+      color: #BBB;
+      padding: 0 10px
+    }
+
+    h1,
+    h2,
+    h3 {
+      line-height: 1.2
+    }
+  </style>
+  {% block head %}{% endblock %}
+</head>
+
+<body>
+  {% block content %}
+  {% endblock %}
+</body>
+
+</html>

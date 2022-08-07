@@ -1,0 +1,16 @@
+[package]
+name = "gramberry"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+askama = "*"
+axum = "*"
+axum-extra = { version = "*", features = ["cookie-private"] }
+serde = { version = "*", features = ["derive"] }
+tokio = { version = "1.0", features = ["full"] }
+tower-http = { version = "*", features = ["trace"] }
+tracing = "*"
+tracing-subscriber = { version = "*", features = ["env-filter"] }

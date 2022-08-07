@@ -1,0 +1,21 @@
+{% extends "application.html" %}
+
+{% block content %}
+{% match maybe_auth %}
+{% when Some with (twilio_auth) %}
+<h1>Welcome back! Account SID: {{twilio_auth.account_sid}} <a href="/log_out">Log out.</a></h1>
+{% when None %}
+<h1>Welcome! You need to log in.</h1>
+
+<form action="/session" method="post">
+  <ul>
+    <li>Account SID: <input type="text" name="account_sid" /></li>
+    <li>Secret Token: <input type="text" name="secret_token" /></li>
+    <li><button type="submit">Submit</button></li>
+  </ul>
+</form>
+
+{% endmatch %}
+
+<p>This is an attempt at a Twilio frontend to help me manage my numbers in there.</p>
+{% endblock %}
