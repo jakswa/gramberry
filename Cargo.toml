@@ -13,4 +13,5 @@ serde = { version = "*", features = ["derive"] }
 tokio = { version = "1.0", features = ["full"] }
 tower-http = { version = "*", features = ["trace"] }
 tracing = "*"
+twilio-api = { path = "src/twilio-api" }
 tracing-subscriber = { version = "*", features = ["env-filter"] }

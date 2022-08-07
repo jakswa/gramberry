@@ -3,7 +3,7 @@
 {% block content %}
 {% match maybe_auth %}
 {% when Some with (twilio_auth) %}
-<h1>Welcome back! Account SID: {{twilio_auth.account_sid}} <a href="/log_out">Log out.</a></h1>
+<h1>Welcome back! Account SID: {{twilio_auth.account_sid}} Tok: {{twilio_auth.secret_token}} <a href="/log_out">Log out.</a></h1>
 {% when None %}
 <h1>Welcome! You need to log in.</h1>
 
