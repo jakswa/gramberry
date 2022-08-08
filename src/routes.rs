@@ -30,6 +30,7 @@ pub fn build() -> axum::Router {
         // an HTTP client for reuse across requests, for connection pooling :sparkles:
         .layer(axum::Extension(
             reqwest::ClientBuilder::new()
+                // this is so SMS media redirects are not followed automatically
                 .redirect(reqwest::redirect::Policy::none())
                 .build()
                 .unwrap(),
