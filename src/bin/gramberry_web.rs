@@ -8,7 +8,7 @@ async fn main() {
     tracing::debug!("listening on {}", addr);
     axum::Server::bind(&addr)
         .serve(
-            gramberry::build_router()
+            gramberry::routes::build()
                 .layer(tower_http::trace::TraceLayer::new_for_http())
                 .into_make_service(),
         )

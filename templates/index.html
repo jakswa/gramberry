@@ -1,11 +1,20 @@
 {% extends "application.html" %}
 
+{% block pagetitle %}Welcome to{% endblock %}
+
 {% block content %}
+<h1>Welcome!</h1>
+<p>This is an attempt at a Twilio frontend to help me manage my numbers in there.
+It is currently read-only and tries to help me read the data in twilio quickly.</p>
 {% match maybe_auth %}
 {% when Some with (twilio_auth) %}
-<h1>Welcome back! Account SID: {{twilio_auth.account_sid}} Tok: {{twilio_auth.secret_token}} <a href="/log_out">Log out.</a></h1>
+<p>Logged in as Account SID: {{twilio_auth.account_sid}}.</p>
 {% when None %}
-<h1>Welcome! You need to log in.</h1>
+<h2>You need to log in.</h2>
+
+<p>Sleep easy, submitting this form only creates an encrypted,
+Secure, HttpOnly cookie. Your secrets are stored only in your
+browser.</p>
 
 <form action="/session" method="post">
   <ul>
@@ -17,5 +26,4 @@
 
 {% endmatch %}
 
-<p>This is an attempt at a Twilio frontend to help me manage my numbers in there.</p>
 {% endblock %}

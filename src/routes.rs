@@ -8,16 +8,24 @@ use axum::{
     Form, Router,
 };
 
-use axum_extra::extract::cookie::{Cookie, PrivateCookieJar};
+use axum_extra::extract::cookie::{Cookie, Key as CookieKey, PrivateCookieJar};
+use reqwest;
 use serde::{Deserialize, Serialize};
 
 pub fn build() -> axum::Router {
+    let key = match std::env::var("GRAMBERRY_SECRET") {
+        Ok(secret) => CookieKey::from(secret[..].as_bytes()),
+        _ => CookieKey::generate(),
+    };
     Router::new()
         .route("/", get(index))
         .route("/calls", get(calls_index))
         .route("/session", post(session_create))
         .route("/log_out", get(session_destroy))
         .route("/health_check", get(health_check))
+        .layer(axum::Extension(key))
+        // an HTTP client for reuse across requests, for connection pooling :sparkles:
+        .layer(axum::Extension(reqwest::Client::new()))
 }
 
 async fn session_create(
@@ -84,12 +92,16 @@ async fn health_check() -> &'static str {
 }
 
 async fn index(maybe_auth: Option<TwilioAuth>) -> impl IntoResponse {
-    HtmlTemplate(IndexTemplate { maybe_auth })
+    HtmlTemplate(IndexTemplate {
+        logged_in: maybe_auth.is_some(),
+        maybe_auth,
+    })
 }
 
 #[derive(Template)]
 #[template(path = "index.html")]
 struct IndexTemplate {
+    logged_in: bool,
     maybe_auth: Option<TwilioAuth>,
 }
 
@@ -116,13 +128,17 @@ where
 use twilio_api::apis::{configuration::Configuration as TwilioConfig, default_api as Twilio};
 use twilio_api::models::ApiV2010AccountCall as TwilioCall;
 
-async fn calls_index(twilio_auth: TwilioAuth) -> impl IntoResponse {
+async fn calls_index(
+    twilio_auth: TwilioAuth,
+    axum::Extension(http_client): axum::Extension<reqwest::Client>,
+) -> impl IntoResponse {
     let account_sid = twilio_auth.account_sid;
     let twilio_config = TwilioConfig {
         basic_auth: Some((account_sid.clone(), Some(twilio_auth.secret_token))),
+        // this piece will let us pool + reuse http connections to twilio :sparkles:
+        client: http_client,
         ..Default::default()
     };
-    // TODO: get this client from axum state, so HTTP connection pools get reuse. Ugh how.
     let resp = Twilio::list_call(
         &twilio_config,
         &account_sid,
@@ -139,12 +155,28 @@ async fn calls_index(twilio_auth: TwilioAuth) -> impl IntoResponse {
         None,
     )
     .await;
-    let call_list = resp.unwrap().calls.unwrap();
-    HtmlTemplate(CallsIndexTemplate { calls: call_list })
+    let call_list: Vec<TwilioCall> = resp.unwrap().calls.unwrap();
+    HtmlTemplate(CallsIndexTemplate {
+        calls: call_list,
+        logged_in: true,
+    })
 }
 
 #[derive(Template)]
 #[template(path = "calls_index.html")]
 struct CallsIndexTemplate {
     calls: Vec<TwilioCall>,
+    logged_in: bool,
+}
+
+mod filters {
+    pub fn unwrapstring(s: &Option<String>) -> ::askama::Result<String> {
+        Ok(s.clone().expect("option was None :("))
+    }
+    pub fn is_inbound_string(s: &Option<String>) -> ::askama::Result<bool> {
+        match s.clone() {
+            Some(val) => Ok(val == "inbound".to_string()),
+            _ => Ok(false),
+        }
+    }
 }

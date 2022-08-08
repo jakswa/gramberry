@@ -1,52 +1,30 @@
 {% extends "application.html" %}
 
-{% block pagetitle %}Calls{% endblock %}
+{% block pagetitle %}Calls on{% endblock %}
 
 {% block content %}
-<h1> HI FROM CALLS TEMPLATE! </h1>
+<h1> HI FROM CALLS_INDEX TEMPLATE! </h1>
 
 <ul>
   {% for call in calls %}
-  <li>
-    <ul>
-      <li>
-        {% match call.sid %}
-        {% when Some with (sid) %}
-        sid: {{ sid }}
-        {% when None %}
-        {% endmatch %}
-      </li>
-      <li>
-        {% match call.to %}
-        {% when Some with (to) %}
-        to: {{ to }}
-        {% when None %}
-        {% endmatch %}
-      </li>
-      <li>
-        {% match call.from %}
-        {% when Some with (from) %}
-        from: {{ from }}
-        {% when None %}
-        {% endmatch %}
-      </li>
-      <li>
-        {% match call.date_created %}
-        {% when Some with (date_created) %}
-        <!-- TODO: parse server-side RFC2822, then output here to ISO8601 -->
-        date_created: <local-time datetime="{{ date_created }}">{{ date_created }}</local-time>
-        {% when None %}
-        {% endmatch %}
-      </li>
-      <li>
-        {% match call.duration %}
-        {% when Some with (duration) %}
-        duration: {{ duration }}s
-        {% when None %}
-        still in progress
-        {% endmatch %}
-      </li>
-    </ul>
+  <li sid="{{call.sid|unwrapstring}}">
+    <code>
+    {% if call.direction|is_inbound_string %}
+      📥 {{ call.from|unwrapstring }}
+    {% else %}
+      📤 {{ call.to|unwrapstring }}
+    {% endif %}
+
+    {% match call.duration %}
+    {% when Some with (duration) %}
+    for {{ duration }}s
+    {% when None %}
+    in progress
+    {% endmatch %}
+
+    starting
+    <relative-time datetime="{{call.date_created|unwrapstring}}"></relative-time>
+    </code>
   </li>
   {% endfor %}
 </ul>

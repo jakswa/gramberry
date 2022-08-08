@@ -9,6 +9,11 @@ edition = "2021"
 askama = "*"
 axum = "*"
 axum-extra = { version = "*", features = ["cookie-private"] }
+chrono = "*"
+
+# for sharing a client across twilio API calls. See src/twilio-api for more.
+reqwest = { version = "*", features = ["json", "multipart"] }
+
 serde = { version = "*", features = ["derive"] }
 tokio = { version = "1.0", features = ["full"] }
 tower-http = { version = "*", features = ["trace"] }
