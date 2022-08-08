@@ -8,7 +8,7 @@ use axum::{
     Form, Router,
 };
 
-use axum_extra::extract::cookie::{Cookie, Key as CookieKey, PrivateCookieJar};
+use axum_extra::extract::cookie::{Cookie, Key as CookieKey, PrivateCookieJar, SameSite};
 use reqwest;
 use serde::{Deserialize, Serialize};
 
@@ -37,6 +37,7 @@ async fn session_create(
             "twauth",
             format!("{},{}", payload.account_sid, payload.secret_token),
         )
+        .same_site(SameSite::Strict)
         .secure(true)
         .http_only(true)
         .finish(),
@@ -175,7 +176,7 @@ mod filters {
     }
     pub fn is_inbound_string(s: &Option<String>) -> ::askama::Result<bool> {
         match s.clone() {
-            Some(val) => Ok(val == "inbound".to_string()),
+            Some(val) => Ok(&val == "inbound"),
             _ => Ok(false),
         }
     }
