@@ -8,7 +8,7 @@
 It is currently read-only and tries to help me read the data in twilio quickly.</p>
 {% match maybe_auth %}
 {% when Some with (twilio_auth) %}
-<p>Logged in as Account SID: {{twilio_auth.account_sid}}.</p>
+<p>Logged into: {{twilio_auth.friendly_name|unwrapstring}}</p>
 {% when None %}
 <h2>You need to log in.</h2>
 

@@ -25,12 +25,17 @@
 </head>
 
 <body>
-  {% if logged_in %}
+  {% match maybe_auth %}
+  {% when Some with (auth) %}
   <nav>
+    {{auth.friendly_name|unwrapstring}}
+    <a href="/">Home</a> |
     <a href="/calls">Calls</a> |
+    <a href="/sms">SMS</a> |
     <a href="/log_out">Log Out</a>
   </nav>
-  {% endif %}
+  {% else %}
+  {% endmatch %}
   {% block content %}
   {% endblock %}
 </body>

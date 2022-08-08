@@ -1,0 +1,27 @@
+{% extends "application.html" %}
+
+{% block pagetitle %}SMS on{% endblock %}
+
+{% block content %}
+<h1> HI FROM SMS_INDEX TEMPLATE! </h1>
+
+<ul>
+  {% for item in msgs %}
+  {% let sid = item.sid|unwrapstring %}
+  <li sid="{{sid}}">
+    {% if item.direction|is_inbound_msg %}
+    📥 {{ item.from|unwrapstring }}
+    {% else %}
+    📤 {{ item.to|unwrapstring }}
+    {% endif %}
+    <relative-time datetime="{{item.date_created|unwrapstring}}"></relative-time>:
+    <p>{{item.body|unwrapstring}}</p>
+
+    {% if item.num_media|unwrapstring != "0" %}
+    <a href="/sms/{{sid}}/media">See media.</a>
+    {% endif %}
+  </li>
+  {% endfor %}
+</ul>
+
+{% endblock %}

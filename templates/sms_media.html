@@ -1,0 +1,19 @@
+{% extends "application.html" %}
+
+{% block pagetitle %}SMS Media on{% endblock %}
+
+{% block content %}
+<h1> HI FROM SMS_MEDIA TEMPLATE! </h1>
+
+<ul>
+  {% for item in media_list %}
+  {% let sid = item.sid|unwrapstring %}
+  <li sid="{{sid}}">
+    <relative-time datetime="{{item.date_created|unwrapstring}}"></relative-time>
+    <img style="width: 100%" src="media/{{item.sid|unwrapstring}}"></img>
+
+  </li>
+  {% endfor %}
+</ul>
+
+{% endblock %}
