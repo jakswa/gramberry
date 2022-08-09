@@ -6,6 +6,9 @@
 <h1> HI FROM SMS_INDEX TEMPLATE! </h1>
 
 <ul>
+  {% for (contact, msgs) in sorted_contacts %}
+  <li>{{contact}}
+    <ul>
   {% for item in msgs %}
   {% let sid = item.sid|unwrapstring %}
   {% let num_media = item.num_media|unwrapstring %}
@@ -16,24 +19,21 @@
 
       {% if item.body|is_present_string %}
       {{item.body|unwrapstring}}
-      {% else %}
+      {% else if num_media == "0" %}
       <em>[No message body]</em>
+      {% endif %}
+      {% if num_media ==  "1" %}
+      <a href="/sms/{{sid}}/media">[See media.]</a>
+      {% else if num_media != "0" %}
+      <a href="/sms/{{sid}}/media">[See {{num_media}} media.]</a>
       {% endif %}
     </b>
 
 
-    {% if inbound %}
-    {{ item.from|unwrapstring }}
-    {% else %}
-    {{ item.to|unwrapstring }}
-    {% endif %}
     <relative-time datetime="{{item.date_created|unwrapstring}}"></relative-time>
-    {% if num_media ==  "1" %}
-    <a href="/sms/{{sid}}/media">[See media.]</a>
-    {% else if num_media == "0" %}
-    {% else %}
-    <a href="/sms/{{sid}}/media">[See {{num_media}} media.]</a>
-    {% endif %}
+  </li>
+  {% endfor %}
+    </ul>
   </li>
   {% endfor %}
 </ul>

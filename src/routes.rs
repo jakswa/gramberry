@@ -1,13 +1,12 @@
-use askama::Template;
 use axum::{
     async_trait,
     extract::{FromRequest, Path, RequestParts},
-    http::StatusCode,
-    response::{Html, IntoResponse, Redirect, Response},
+    response::{IntoResponse, Redirect, Response},
     routing::{get, post},
     Form, Router,
 };
 
+use crate::templates::*;
 use axum_extra::extract::cookie::{Cookie, Key as CookieKey, PrivateCookieJar, SameSite};
 use reqwest;
 use serde::{Deserialize, Serialize};
@@ -70,13 +69,13 @@ async fn session_create(
 }
 
 #[derive(Deserialize, Serialize, Default)]
-struct TwilioAuth {
-    account_sid: String,
-    secret_token: String,
-    friendly_name: Option<String>,
+pub struct TwilioAuth {
+    pub account_sid: String,
+    pub secret_token: String,
+    pub friendly_name: Option<String>,
 }
 
-struct TwilioAuthRedirect;
+pub struct TwilioAuthRedirect;
 impl IntoResponse for TwilioAuthRedirect {
     fn into_response(self) -> Response {
         Redirect::temporary("/").into_response()
@@ -122,37 +121,23 @@ async fn index(maybe_auth: Option<TwilioAuth>) -> impl IntoResponse {
     HtmlTemplate(IndexTemplate { maybe_auth })
 }
 
-#[derive(Template)]
-#[template(path = "index.html")]
-struct IndexTemplate {
-    maybe_auth: Option<TwilioAuth>,
-}
-
-struct HtmlTemplate<T>(T);
-
-impl<T> IntoResponse for HtmlTemplate<T>
-where
-    T: Template,
-{
-    fn into_response(self) -> Response {
-        match self.0.render() {
-            Ok(html) => Html(html).into_response(),
-            Err(err) => (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Failed to render template. Error: {}", err),
-            )
-                .into_response(),
-        }
-    }
-}
-
 // --- BEGIN TWILIO LIST ROUTES ---
 
-use twilio_api::apis::{configuration::Configuration as TwilioConfig, default_api as Twilio};
 use twilio_api::models::{
     ApiV2010AccountCall as TwilioCall, ApiV2010AccountMessage as TwilioMessage,
     ApiV2010AccountMessageMedia as MessageMedia,
 };
+use twilio_api::{
+    apis::{configuration::Configuration as TwilioConfig, default_api as Twilio},
+    models::MessageEnumDirection,
+};
+
+fn contact_for(msg: &TwilioMessage) -> String {
+    match msg.direction {
+        Some(MessageEnumDirection::Inbound) => msg.from.clone().unwrap(),
+        _ => msg.to.clone().unwrap(),
+    }
+}
 
 async fn sms_index(
     twilio_auth: TwilioAuth,
@@ -175,9 +160,24 @@ async fn sms_index(
         None,
     )
     .await;
-    let sms_list: Vec<TwilioMessage> = resp.unwrap().messages.unwrap();
+
+    // sorted + grouped for easy reading in UI.
+    // still a single page of msgs, just grouping them
+    let mut sorted_contacts: Vec<(String, Vec<TwilioMessage>)> = Vec::new();
+    resp.unwrap().messages.unwrap().iter().for_each(|msg| {
+        let contact = contact_for(msg);
+        match sorted_contacts.iter_mut().find(|i| i.0 == contact) {
+            Some(grp) => grp.1.push(msg.clone()),
+            _ => {
+                let mut sms_list: Vec<TwilioMessage> = Vec::new();
+                sms_list.push(msg.clone());
+                sorted_contacts.push((contact, sms_list));
+            }
+        }
+    });
+
     HtmlTemplate(SmsIndexTemplate {
-        msgs: sms_list,
+        sorted_contacts,
         maybe_auth: Some(twilio_auth),
     })
 }
@@ -264,51 +264,4 @@ async fn calls_index(
         calls: call_list,
         maybe_auth: Some(twilio_auth),
     })
-}
-
-#[derive(Template)]
-#[template(path = "calls_index.html")]
-struct CallsIndexTemplate {
-    calls: Vec<TwilioCall>,
-    maybe_auth: Option<TwilioAuth>,
-}
-
-#[derive(Template)]
-#[template(path = "sms_index.html")]
-struct SmsIndexTemplate {
-    msgs: Vec<TwilioMessage>,
-    maybe_auth: Option<TwilioAuth>,
-}
-
-#[derive(Template)]
-#[template(path = "sms_media.html")]
-struct SmsMediaTemplate {
-    media_list: Vec<MessageMedia>,
-    maybe_auth: Option<TwilioAuth>,
-}
-
-mod filters {
-    use twilio_api::models::MessageEnumDirection;
-
-    pub fn unwrapstring(s: &Option<String>) -> ::askama::Result<String> {
-        Ok(s.clone().expect("option was None :("))
-    }
-    pub fn is_present_string(s: &Option<String>) -> ::askama::Result<bool> {
-        match s.clone() {
-            Some(str) => Ok(str.len() > 0),
-            _ => Ok(false),
-        }
-    }
-    pub fn is_inbound_string(s: &Option<String>) -> ::askama::Result<bool> {
-        match s.clone() {
-            Some(val) => Ok(&val == "inbound"),
-            _ => Ok(false),
-        }
-    }
-    pub fn is_inbound_msg(s: &Option<MessageEnumDirection>) -> ::askama::Result<bool> {
-        match s {
-            Some(MessageEnumDirection::Inbound) => Ok(true),
-            _ => Ok(false),
-        }
-    }
 }
