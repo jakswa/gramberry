@@ -1,6 +1,6 @@
 {% extends "application.html" %}
 
-{% block pagetitle %}SMS on{% endblock %}
+{% block pagetitle %}SMS on {% endblock %}
 
 {% block content %}
 <h1> HI FROM SMS_INDEX TEMPLATE! </h1>
@@ -8,17 +8,31 @@
 <ul>
   {% for item in msgs %}
   {% let sid = item.sid|unwrapstring %}
+  {% let num_media = item.num_media|unwrapstring %}
+  {% let inbound = item.direction|is_inbound_msg %}
   <li sid="{{sid}}">
-    {% if item.direction|is_inbound_msg %}
-    📥 {{ item.from|unwrapstring }}
-    {% else %}
-    📤 {{ item.to|unwrapstring }}
-    {% endif %}
-    <relative-time datetime="{{item.date_created|unwrapstring}}"></relative-time>:
-    <p>{{item.body|unwrapstring}}</p>
+    <b>
+      {% if inbound %}📥{% else %}📤{% endif %}
 
-    {% if item.num_media|unwrapstring != "0" %}
-    <a href="/sms/{{sid}}/media">See media.</a>
+      {% if item.body|is_present_string %}
+      {{item.body|unwrapstring}}
+      {% else %}
+      <em>[No message body]</em>
+      {% endif %}
+    </b>
+
+
+    {% if inbound %}
+    {{ item.from|unwrapstring }}
+    {% else %}
+    {{ item.to|unwrapstring }}
+    {% endif %}
+    <relative-time datetime="{{item.date_created|unwrapstring}}"></relative-time>
+    {% if num_media ==  "1" %}
+    <a href="/sms/{{sid}}/media">[See media.]</a>
+    {% else if num_media == "0" %}
+    {% else %}
+    <a href="/sms/{{sid}}/media">[See {{num_media}} media.]</a>
     {% endif %}
   </li>
   {% endfor %}

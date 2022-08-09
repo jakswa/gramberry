@@ -293,6 +293,12 @@ mod filters {
     pub fn unwrapstring(s: &Option<String>) -> ::askama::Result<String> {
         Ok(s.clone().expect("option was None :("))
     }
+    pub fn is_present_string(s: &Option<String>) -> ::askama::Result<bool> {
+        match s.clone() {
+            Some(str) => Ok(str.len() > 0),
+            _ => Ok(false),
+        }
+    }
     pub fn is_inbound_string(s: &Option<String>) -> ::askama::Result<bool> {
         match s.clone() {
             Some(val) => Ok(&val == "inbound"),
