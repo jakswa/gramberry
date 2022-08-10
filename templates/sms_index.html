@@ -6,33 +6,39 @@
 <h1> HI FROM SMS_INDEX TEMPLATE! </h1>
 
 <ul>
-  {% for (contact, msgs) in sorted_contacts %}
+  {% for (contact, last_twilio_num, msgs) in sorted_contacts %}
   <li>{{contact}}
+    <form method="POST">
+      <input type="hidden" name="to" value="{{contact}}"></input>
+      <input type="hidden" name="from" value="{{last_twilio_num}}"></input>
+      <input type="text" name="body" value="" required ></input>
+      <button type="submit">Reply</button>
+    </form>
     <ul>
-  {% for item in msgs %}
-  {% let sid = item.sid|unwrapstring %}
-  {% let num_media = item.num_media|unwrapstring %}
-  {% let inbound = item.direction|is_inbound_msg %}
-  <li sid="{{sid}}">
-    <b>
-      {% if inbound %}📥{% else %}📤{% endif %}
+      {% for item in msgs %}
+      {% let sid = item.sid|unwrapstring %}
+      {% let num_media = item.num_media|unwrapstring %}
+      {% let inbound = item.direction|is_inbound_msg %}
+      <li sid="{{sid}}">
+        <b>
+          {% if inbound %}📥{% else %}📤{% endif %}
 
-      {% if item.body|is_present_string %}
-      {{item.body|unwrapstring}}
-      {% else if num_media == "0" %}
-      <em>[No message body]</em>
-      {% endif %}
-      {% if num_media ==  "1" %}
-      <a href="/sms/{{sid}}/media">[See media.]</a>
-      {% else if num_media != "0" %}
-      <a href="/sms/{{sid}}/media">[See {{num_media}} media.]</a>
-      {% endif %}
-    </b>
+          {% if item.body|is_present_string %}
+          {{item.body|unwrapstring}}
+          {% else if num_media == "0" %}
+          <em>[No message body]</em>
+          {% endif %}
+          {% if num_media ==  "1" %}
+          <a href="/sms/{{sid}}/media">[See media.]</a>
+          {% else if num_media != "0" %}
+          <a href="/sms/{{sid}}/media">[See {{num_media}} media.]</a>
+          {% endif %}
+        </b>
 
 
-    <relative-time datetime="{{item.date_created|unwrapstring}}"></relative-time>
-  </li>
-  {% endfor %}
+        <relative-time datetime="{{item.date_created|unwrapstring}}"></relative-time>
+      </li>
+      {% endfor %}
     </ul>
   </li>
   {% endfor %}

@@ -1,12 +1,13 @@
 use crate::routes::TwilioAuth;
 use askama::Template;
 use axum::{
-    http::StatusCode,
+    http::{header, StatusCode},
     response::{Html, IntoResponse, Response},
 };
 use twilio_api::models::{
-    ApiV2010AccountCall as TwilioCall, ApiV2010AccountMessage as TwilioMessage,
-    ApiV2010AccountMessageMedia as MessageMedia,
+    ApiV2010AccountCall as TwilioCall, ApiV2010AccountCallCallRecording as CallRecording,
+    ApiV2010AccountMessage as TwilioMessage, ApiV2010AccountMessageMedia as MessageMedia,
+    ApiV2010AccountRecording as AccountRecording, ApiV2010AccountTranscription as Transcription,
 };
 
 pub struct HtmlTemplate<T>(pub T);
@@ -27,6 +28,36 @@ where
     }
 }
 
+pub struct XmlTemplate<T>(pub T);
+
+impl<T> IntoResponse for XmlTemplate<T>
+where
+    T: Template,
+{
+    fn into_response(self) -> Response {
+        match self.0.render() {
+            Ok(xml) => (StatusCode::OK, [(header::CONTENT_TYPE, "text/xml")], xml).into_response(),
+            Err(err) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Failed to render template. Error: {}", err),
+            )
+                .into_response(),
+        }
+    }
+}
+
+#[derive(Template)]
+#[template(path = "twiml/voicemail.xml")]
+pub struct VoicemailTwiml {}
+
+#[derive(Template)]
+#[template(path = "twiml/reject.xml")]
+pub struct RejectTwiml {}
+
+#[derive(Template)]
+#[template(path = "twiml/hangup.xml")]
+pub struct HangupTwiml {}
+
 #[derive(Template)]
 #[template(path = "index.html")]
 pub struct IndexTemplate {
@@ -41,9 +72,30 @@ pub struct CallsIndexTemplate {
 }
 
 #[derive(Template)]
+#[template(path = "call_recordings_index.html")]
+pub struct CallRecordingsIndexTemplate {
+    pub recording_list: Vec<CallRecording>,
+    pub maybe_auth: Option<TwilioAuth>,
+}
+
+#[derive(Template)]
+#[template(path = "recordings_index.html")]
+pub struct RecordingsIndexTemplate {
+    pub recording_list: Vec<AccountRecording>,
+    pub maybe_auth: Option<TwilioAuth>,
+}
+
+#[derive(Template)]
+#[template(path = "transcriptions_index.html")]
+pub struct TranscriptionsIndexTemplate {
+    pub transcription_list: Vec<Transcription>,
+    pub maybe_auth: Option<TwilioAuth>,
+}
+
+#[derive(Template)]
 #[template(path = "sms_index.html")]
 pub struct SmsIndexTemplate {
-    pub sorted_contacts: Vec<(String, Vec<TwilioMessage>)>,
+    pub sorted_contacts: Vec<(String, String, Vec<TwilioMessage>)>,
     pub maybe_auth: Option<TwilioAuth>,
 }
 
@@ -63,6 +115,12 @@ mod filters {
     pub fn is_present_string(s: &Option<String>) -> ::askama::Result<bool> {
         match s.clone() {
             Some(str) => Ok(str.len() > 0),
+            _ => Ok(false),
+        }
+    }
+    pub fn non_zero_string(s: &Option<String>) -> ::askama::Result<bool> {
+        match s.clone() {
+            Some(str) => Ok(str.len() > 0 && str != "0"),
             _ => Ok(false),
         }
     }

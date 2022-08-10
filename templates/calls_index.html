@@ -7,7 +7,8 @@
 
 <ul>
   {% for call in calls %}
-  <li sid="{{call.sid|unwrapstring}}">
+  {% let sid = call.sid|unwrapstring %}
+  <li sid="{{sid}}">
     <code>
     {% if call.direction|is_inbound_string %}
       📥 {{ call.from|unwrapstring }}
@@ -25,6 +26,9 @@
     starting
     <relative-time datetime="{{call.date_created|unwrapstring}}"></relative-time>
     </code>
+    {% if call.duration|non_zero_string %}
+    <a href="calls/{{sid}}/recordings">Recordings</a>
+    {% endif %}
   </li>
   {% endfor %}
 </ul>

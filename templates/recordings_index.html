@@ -1,0 +1,23 @@
+{% extends "application.html" %}
+
+{% block pagetitle %}Recordings on {% endblock %}
+
+{% block content %}
+<h1> HI FROM RECORDINGS_INDEX TEMPLATE! </h1>
+
+<ul>
+  {% for item in recording_list %}
+  {% let sid = item.sid|unwrapstring %}
+  {% let call_sid = item.call_sid|unwrapstring %}
+  <li sid="{{sid}}">
+    <relative-time datetime="{{item.date_created|unwrapstring}}"></relative-time>
+    <audio controls preload="none" style="width: 100%" src="/calls/{{call_sid}}/recordings/{{sid}}"></audio>
+
+  </li>
+  {% endfor %}
+  {% if recording_list.len() == 0 %}
+  <li>Nothing here.</li>
+  {% endif %}
+</ul>
+
+{% endblock %}

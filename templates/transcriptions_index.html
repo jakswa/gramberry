@@ -1,0 +1,26 @@
+{% extends "application.html" %}
+
+{% block pagetitle %}Transcriptions on {% endblock %}
+
+{% block content %}
+<h1> HI FROM TRANSCRIPTIONS_INDEX TEMPLATE! </h1>
+
+<ul>
+  {% for item in transcription_list %}
+  {% let sid = item.sid|unwrapstring %}
+  <li sid="{{sid}}">
+    <relative-time datetime="{{item.date_created|unwrapstring}}"></relative-time>
+    {% match item.transcription_text %}
+    {% when Some with (text) %}
+    <p>{{text}}</p>
+    {% else %}
+    [No transcript text yet?]
+    {% endmatch %}
+  </li>
+  {% endfor %}
+  {% if transcription_list.len() == 0 %}
+  <li>Nothing here.</li>
+  {% endif %}
+</ul>
+
+{% endblock %}
