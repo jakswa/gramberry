@@ -2,9 +2,11 @@ use axum::{
     async_trait,
     extract::{FromRequest, Path, RequestParts},
     response::{IntoResponse, Redirect, Response},
-    routing::{get, post},
+    routing::{get, get_service, post},
     Form, Router,
 };
+
+use tower_http::services::ServeDir;
 
 use crate::templates::*;
 use axum_extra::extract::cookie::{Cookie, Key as CookieKey, PrivateCookieJar, SameSite};
@@ -34,6 +36,15 @@ pub fn build() -> axum::Router {
         .route("/session", post(session_create))
         .route("/log_out", get(session_destroy))
         .route("/health_check", get(health_check))
+        .nest(
+            "/public",
+            get_service(ServeDir::new("public")).handle_error(|error: std::io::Error| async move {
+                (
+                    axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                    format!("Unhandled internal error: {}", error),
+                )
+            }),
+        )
         .layer(axum::Extension(key))
         // an HTTP client for reuse across requests, for connection pooling :sparkles:
         .layer(axum::Extension(

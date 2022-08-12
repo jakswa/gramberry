@@ -1,29 +1,69 @@
 {% extends "application.html" %}
 
 {% block pagetitle %}Welcome to {% endblock %}
+{% block nav_home_style %}{{style_for_current_page_link}}{% endblock %}
 
 {% block content %}
-<h1>Welcome!</h1>
-<p>This is an attempt at a Twilio frontend to help me manage my numbers in there.
-It is currently read-only and tries to help me read the data in twilio quickly.</p>
-{% match maybe_auth %}
-{% when Some with (twilio_auth) %}
-<p>Logged into: {{twilio_auth.friendly_name|unwrapstring}}</p>
-{% when None %}
-<h2>You need to log in.</h2>
-
-<p>Sleep easy, submitting this form only creates an encrypted,
-Secure, HttpOnly cookie. Your secrets are stored only in your
-browser.</p>
-
-<form action="/session" method="post">
-  <ul>
-    <li>Account SID: <input type="text" name="account_sid" /></li>
-    <li>Secret Token: <input type="text" name="secret_token" /></li>
-    <li><button type="submit">Submit</button></li>
-  </ul>
-</form>
-
-{% endmatch %}
+    <div class="container px-6 mx-auto">
+      <div
+        class="flex flex-col text-center md:flex-row h-screen justify-evenly md:items-center"
+      >
+        <div class="flex flex-col w-full">
+          <p><img class="inline glow-image w-1/3" src="/public/favicon.png" /></p>
+          <h1 class="text-5xl p-2 pt-16 text-zinc-100 font-bold">A twilio frontend.</h1>
+          <p class="p-2 lg:px-12 text-zinc-400">
+            This is a mostly read-only browser UI for twilio.
+            You might find this helpful if you are tired of
+            navigating the UI console to check SMS, recordings,
+            or transcriptions. There is a
+            <a href="https://github.com/jakswa/gramberry" target="_blank" class="text-teal-800">Github Repo</a>
+            if you like reading Rust, HTML, and CSS.
+          </p>
+        </div>
+        {% if maybe_auth.is_none() %}
+        <div class="w-full md:w-full lg:w-9/12 mx-auto md:mx-0">
+          <div class="bg-zinc-800 p-10 flex flex-col w-full shadow-xl rounded-xl">
+            <h2 class="text-2xl font-bold text-zinc-100 text-left mb-5">
+              Set Auth Cookie
+            </h2>
+            <p class="text-1xl text-zinc-400">There is no database 😌.</p>
+            <form action="/session" method="post" class="w-full">
+              <div id="input" class="flex flex-col w-full my-5">
+                <label for="account_sid" class="text-zinc-500 mb-2">Account SID</label>
+                <input
+                  type="password"
+                  id="account_sid"
+                  name="account_sid"
+                  placeholder="AC123ABC..."
+                  class="appearance-none border-2 border-zinc-100 rounded-lg px-4 py-3 placeholder-zinc-300 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:shadow-lg"
+                />
+              </div>
+              <div id="input" class="flex flex-col w-full my-5">
+                <label for="secret_token" class="text-zinc-500 mb-2">Secret Token</label>
+                <input
+                  type="password"
+                  id="secret_token"
+                  name="secret_token"
+                  placeholder="Secret Token"
+                  class="appearance-none border-2 border-zinc-100 rounded-lg px-4 py-3 placeholder-zinc-300 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:shadow-lg"
+                />
+              </div>
+              <div id="button" class="flex flex-col w-full my-5">
+                <button
+                  type="submit"
+                  class="w-full py-4 bg-teal-900 rounded-lg text-teal-400"
+                >
+                  <div class="flex flex-row items-center justify-center">
+                    <div class="font-bold">Submit</div>
+                  </div>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  <div>
 
 {% endblock %}

@@ -25,6 +25,7 @@ RUN set -eux; \
 
 WORKDIR /app
 
+COPY --from=builder /app/public ./public
 COPY --from=builder /app/gramberry_web ./gramberry_web
 EXPOSE 3000
 CMD ["./gramberry_web"]
