@@ -4,13 +4,11 @@
 {% block nav_calls_style %}{{style_for_current_page_link}}{% endblock %}
 
 {% block content %}
-<h1> HI FROM CALLS_INDEX TEMPLATE! </h1>
 
-<ul>
+<ul class="flex flex-col text-zinc-200 px-12">
   {% for call in calls %}
   {% let sid = call.sid|unwrapstring %}
-  <li sid="{{sid}}">
-    <code>
+  <li sid="{{sid}}" class="py-6">
     {% if call.direction|is_inbound_string %}
       📥 {{ call.from|unwrapstring }}
     {% else %}
@@ -26,9 +24,8 @@
 
     starting
     <relative-time datetime="{{call.date_created|unwrapstring}}"></relative-time>
-    </code>
     {% if call.duration|non_zero_string %}
-    <a href="calls/{{sid}}/recordings">Recordings</a>
+    <a href="calls/{{sid}}/recordings" class="inline-block p-3 bg-gray-800">Recordings</a>
     {% endif %}
   </li>
   {% endfor %}

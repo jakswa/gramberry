@@ -8,7 +8,7 @@
       <div
         class="flex flex-col text-center md:flex-row h-screen justify-evenly md:items-center"
       >
-        <div class="flex flex-col w-full">
+        <div class="flex flex-col w-full pb-12">
           <p><img class="inline glow-image w-1/3" src="/public/favicon.png" /></p>
           <h1 class="text-5xl p-2 pt-16 text-zinc-100 font-bold">A twilio frontend.</h1>
           <p class="p-2 lg:px-12 text-zinc-400">
@@ -23,7 +23,7 @@
         {% if maybe_auth.is_none() %}
         <div class="w-full md:w-full lg:w-9/12 mx-auto md:mx-0">
           <div class="bg-zinc-800 p-10 flex flex-col w-full shadow-xl rounded-xl">
-            <h2 class="text-2xl font-bold text-zinc-100 text-left mb-5">
+            <h2 class="text-2xl font-bold text-zinc-100 mb-5">
               Set Auth Cookie
             </h2>
             <p class="text-1xl text-zinc-400">There is no database 😌.</p>
