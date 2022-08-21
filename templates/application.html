@@ -17,11 +17,13 @@
   <title>{% block pagetitle %}{% endblock %}Gramberry</title>
   <script type="module" src="https://unpkg.com/time-elements@3.0.0/dist/time-elements.js"></script>
 
-  <link rel="stylesheet" href="/public/styles.css"></style>
+  <link rel="stylesheet" href="/public/styles.css">
+  </style>
   {% block head %}{% endblock %}
 </head>
 
 <!-- component -->
+
 <body class="bg-zinc-900">
   {% match maybe_auth %}
   {% when Some with (_auth) %}
@@ -30,11 +32,13 @@
   {% let style_for_nav_link = "text-gray-300 hover:bg-zinc-700 hover:text-white%" %}
   {% let base_nav_link_style = "px-3 py-2 rounded-md text-sm font-medium " %}
   <nav class="bg-zinc-800">
-    <div class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
+    <div class="mx-auto px-2 sm:px-6 lg:px-8">
       <div class="relative flex items-center justify-between h-16">
         <div class="absolute inset-y-0 left-0 flex items-center sm:hidden">
           <!-- Mobile menu button-->
-          <button id='mobile-nav-burger' type="button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-zinc-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white" aria-controls="mobile-menu" aria-expanded="false">
+          <button id='mobile-nav-burger' type="button"
+            class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-zinc-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
+            aria-controls="mobile-menu" aria-expanded="false">
             <span class="sr-only">Open main menu</span>
             <!--
               Icon when menu is closed.
@@ -43,7 +47,8 @@
 
               Menu open: "hidden", Menu closed: "block"
             -->
-            <svg id='nav-burger-closed' class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
+            <svg id='nav-burger-closed' class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none"
+              viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
             <!--
@@ -53,7 +58,8 @@
 
               Menu open: "block", Menu closed: "hidden"
             -->
-            <svg id='nav-burger-open' class="hidden h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
+            <svg id='nav-burger-open' class="hidden h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none"
+              viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -67,14 +73,20 @@
             <div class="flex space-x-4">
               <!-- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" -->
               <a href="/" class="{{base_nav_link_style}}{% block nav_home_style %}{% endblock %}">Home</a>
-              <a href="/calls" class="{{base_nav_link_style}}{% block nav_calls_style %}{{style_for_page_link}}{% endblock %}">Calls</a>
-              <a href="/recordings" class="{{base_nav_link_style}}{% block nav_recordings_style %}{{style_for_page_link}}{% endblock %}">Recordings</a>
-              <a href="/transcriptions" class="{{base_nav_link_style}}{% block nav_transcripts_style %}{{style_for_page_link}}{% endblock %}">Transcripts</a>
-              <a href="/sms" class="{{base_nav_link_style}}{% block nav_sms_style %}{{style_for_page_link}}{% endblock %}">SMS</a>
+              <a href="/calls"
+                class="{{base_nav_link_style}}{% block nav_calls_style %}{{style_for_page_link}}{% endblock %}">Calls</a>
+              <a href="/recordings"
+                class="{{base_nav_link_style}}{% block nav_recordings_style %}{{style_for_page_link}}{% endblock %}">Recordings</a>
+              <a href="/transcriptions"
+                class="{{base_nav_link_style}}{% block nav_transcripts_style %}{{style_for_page_link}}{% endblock %}">Transcripts</a>
+              <a href="/sms"
+                class="{{base_nav_link_style}}{% block nav_sms_style %}{{style_for_page_link}}{% endblock %}">SMS</a>
             </div>
           </div>
           <div class="hidden sm:block sm:ml-6">
-            <a href="/log_out" class="inline-block px-3 py-2 text-teal-400 bg-teal-900 rounded-md text-sm font-medium hover:bg-teal-800 hover:text-teal-300">Log Out</a>
+            <a href="/log_out"
+              class="inline-block px-3 py-2 text-teal-400 bg-teal-900 rounded-md text-sm font-medium hover:bg-teal-800 hover:text-teal-300">Log
+              Out</a>
           </div>
         </div>
       </div>
@@ -83,11 +95,16 @@
     <!-- Mobile menu, show/hide based on menu state. -->
     <div class="hidden sm:hidden" id="mobile-menu">
       <div class="px-2 pt-2 pb-3 space-y-1">
-        <a href="/" class="block {{base_nav_link_style}}{% block nav_home_style %}{{style_for_nav_link}}{% endblock %}">Home</a>
-        <a href="/calls" class="block {{base_nav_link_style}}{% block nav_calls_style %}{{style_for_nav_link}}{% endblock %}">Calls</a>
-        <a href="/recordings" class="block {{base_nav_link_style}}{% block nav_recordings_style %}{{style_for_nav_link}}{% endblock %}">Recordings</a>
-        <a href="/transcriptions" class="block {{base_nav_link_style}}{% block nav_transcripts_style %}{{style_for_nav_link}}{% endblock %}">Transcripts</a>
-        <a href="/sms" class="block {{base_nav_link_style}}{% block nav_sms_style %}{{style_for_nav_link}}{% endblock %}">SMS</a>
+        <a href="/"
+          class="block {{base_nav_link_style}}{% block nav_home_style %}{{style_for_nav_link}}{% endblock %}">Home</a>
+        <a href="/calls"
+          class="block {{base_nav_link_style}}{% block nav_calls_style %}{{style_for_nav_link}}{% endblock %}">Calls</a>
+        <a href="/recordings"
+          class="block {{base_nav_link_style}}{% block nav_recordings_style %}{{style_for_nav_link}}{% endblock %}">Recordings</a>
+        <a href="/transcriptions"
+          class="block {{base_nav_link_style}}{% block nav_transcripts_style %}{{style_for_nav_link}}{% endblock %}">Transcripts</a>
+        <a href="/sms"
+          class="block {{base_nav_link_style}}{% block nav_sms_style %}{{style_for_nav_link}}{% endblock %}">SMS</a>
         <a href="/log_out" class="block {{base_nav_link_style}} bg-teal-900 text-teal-400">Log Out</a>
       </div>
     </div>
@@ -98,7 +115,7 @@
   {% block content %}
   {% endblock %}
   <script type="text/javascript">
-    (function() {
+    (function () {
       const burger = document.querySelector('#mobile-nav-burger');
       if (!burger) return;
 

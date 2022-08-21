@@ -4,25 +4,35 @@
 {% block nav_sms_style %}{{style_for_current_page_link}}{% endblock %}
 
 {% block content %}
-<h1> HI FROM SMS_INDEX TEMPLATE! </h1>
 
-<ul>
+<ul class="flex flex-col text-zinc-200 px-4 pt-6">
   {% for (contact, last_twilio_num, msgs) in sorted_contacts %}
-  <li>{{contact}}
+  <li class="flex flex-col bg-zinc-800 rounded-lg mb-4">
     <form method="POST">
-      <input type="hidden" name="to" value="{{contact}}"></input>
-      <input type="hidden" name="from" value="{{last_twilio_num}}"></input>
-      <input type="text" name="body" value="" required ></input>
-      <button type="submit">Reply</button>
+      <div class="text-lg font-medium bg-zinc-900 flex flex-col md:flex-row">
+        <div class="bg-zinc-700 border-t-1 border-l-1 border-zinc-100 text-gray-200 px-4 py-2 rounded-t-lg md:rounded-tr-none">{{contact}}</div>
+        <input type="hidden" name="to" value="{{contact}}"></input>
+        <input type="hidden" name="from" value="{{last_twilio_num}}"></input>
+        <input placeholder="type here" class="px-4 py-2 bg-gray-700 grow" type="textarea" name="body" value="" required ></input>
+        <button type="submit" class="bg-teal-900 py-2 md:rounded-tr-lg px-4 hover:text-teal-400 text-teal-500">Reply</button>
+      </div>
     </form>
     <ul>
       {% for item in msgs %}
       {% let sid = item.sid|unwrapstring %}
       {% let num_media = item.num_media|unwrapstring %}
       {% let inbound = item.direction|is_inbound_msg %}
-      <li sid="{{sid}}">
-        <b>
-          {% if inbound %}📥{% else %}📤{% endif %}
+      <li class="p-2" sid="{{sid}}">
+        <span class="text-md">
+          {% if inbound %}
+          <span class="inline-block -rotate-90">
+            📥
+          </span>
+          {% else %}
+          <span class="inline-block rotate-90">
+            📤
+          </span>
+          {% endif %}
 
           {% if item.body|is_present_string %}
           {{item.body|unwrapstring}}
@@ -30,14 +40,14 @@
           <em>[No message body]</em>
           {% endif %}
           {% if num_media ==  "1" %}
-          <a href="/sms/{{sid}}/media">[See media.]</a>
+          <a class="text-teal-400" href="/sms/{{sid}}/media">[See media.]</a>
           {% else if num_media != "0" %}
-          <a href="/sms/{{sid}}/media">[See {{num_media}} media.]</a>
+          <a class="text-teal-400" href="/sms/{{sid}}/media">[See {{num_media}} media.]</a>
           {% endif %}
-        </b>
+        </span>
 
 
-        <relative-time datetime="{{item.date_created|unwrapstring}}"></relative-time>
+        <relative-time class="text-zinc-500" datetime="{{item.date_created|unwrapstring}}"></relative-time>
       </li>
       {% endfor %}
     </ul>
