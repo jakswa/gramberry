@@ -14,6 +14,7 @@ use reqwest;
 use serde::{Deserialize, Serialize};
 
 pub fn build() -> axum::Router {
+    // wee haw
     let key = match std::env::var("GRAMBERRY_SECRET") {
         Ok(secret) => CookieKey::from(secret[..].as_bytes()),
         _ => CookieKey::generate(),
