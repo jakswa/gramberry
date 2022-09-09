@@ -13,6 +13,8 @@ use axum_extra::extract::cookie::{Cookie, Key as CookieKey, PrivateCookieJar, Sa
 use reqwest;
 use serde::{Deserialize, Serialize};
 
+pub mod twiml;
+
 pub fn build() -> axum::Router {
     // wee haw
     let key = match std::env::var("GRAMBERRY_SECRET") {
@@ -20,6 +22,7 @@ pub fn build() -> axum::Router {
         _ => CookieKey::generate(),
     };
     Router::new()
+        .merge(twiml::build())
         .route("/", get(index))
         .route("/calls", get(calls_index))
         .route("/calls/:call_sid/recordings", get(call_recordings_index))
@@ -27,16 +30,14 @@ pub fn build() -> axum::Router {
             "/calls/:call_sid/recordings/:recording_sid",
             get(recording_redirect),
         )
+        .route("/health_check", get(health_check))
+        .route("/log_out", get(session_destroy))
         .route("/recordings", get(recordings_index))
+        .route("/session", post(session_create))
         .route("/sms", get(sms_index).post(sms_create))
         .route("/sms/:msg_sid/media", get(sms_media))
         .route("/sms/:msg_sid/media/:media_sid", get(sms_media_redirect))
         .route("/transcriptions", get(transcriptions_index))
-        .route("/twilio/calls", post(twilio_call_create))
-        .route("/twilio/hangup", get(twilio_call_hangup))
-        .route("/session", post(session_create))
-        .route("/log_out", get(session_destroy))
-        .route("/health_check", get(health_check))
         .nest(
             "/public",
             get_service(ServeDir::new("public")).handle_error(|error: std::io::Error| async move {
@@ -142,7 +143,7 @@ async fn index(maybe_auth: Option<TwilioAuth>) -> impl IntoResponse {
     HtmlTemplate(IndexTemplate { maybe_auth })
 }
 
-// --- BEGIN TWILIO LIST ROUTES ---
+// --- BEGIN TWILIO API ROUTES ---
 
 use twilio_api::models::{
     ApiV2010AccountCall as TwilioCall, ApiV2010AccountCallCallRecording as CallRecording,
@@ -454,24 +455,3 @@ async fn recordings_index(
 }
 
 // --- begin TwiML endpoints ---
-#[derive(Deserialize)]
-#[serde(rename_all(deserialize = "PascalCase"))]
-struct TwilioCallForm {
-    stir_verstat: Option<String>,
-}
-
-async fn twilio_call_create(Form(payload): Form<TwilioCallForm>) -> impl IntoResponse {
-    match payload.stir_verstat {
-        Some(stir_verstat) => {
-            if stir_verstat.starts_with("TN-Validation-Passed-A") {
-                return XmlTemplate(VoicemailTwiml {}).into_response();
-            }
-        }
-        _ => {}
-    }
-    XmlTemplate(RejectTwiml {}).into_response()
-}
-
-async fn twilio_call_hangup() -> impl IntoResponse {
-    XmlTemplate(HangupTwiml {}).into_response()
-}
