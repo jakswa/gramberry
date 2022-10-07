@@ -9,6 +9,8 @@ tl;dr if you have `cargo` and `npm` installed, the quickest way to start is:
 $ cargo install rouse
 $ rouse
 ```
+![image](https://user-images.githubusercontent.com/137793/194452762-925717ec-2485-4581-b80c-f7ac8898272b.png)
+
 - starts `cargo watch ...`
 - starts `npx tailwindcss ... --watch`
 
