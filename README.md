@@ -4,9 +4,10 @@ This is a WIP twilio frontend.
 
 ## Local Development
 
-tl;dr if you don't want to read this whole section, you can just:
+tl;dr if you have `cargo` and `npm` installed, the quickest way to start is:
 ```shell
-npm start
+$ cargo install rouse
+$ rouse
 ```
 - starts `cargo watch ...`
 - starts `npx tailwindcss ... --watch`

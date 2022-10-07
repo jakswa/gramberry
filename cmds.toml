@@ -1,0 +1,7 @@
+[[cmds]]
+cmd = "RUST_LOG=debug cargo watch -x run --ignore public"
+label = "rust"
+
+[[cmds]]
+cmd = "npx tailwindcss -i public/tailwind.css --config public/tailwind.config.js -o public/styles.css --watch"
+label = "tailwind"
