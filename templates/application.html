@@ -66,21 +66,23 @@
         </div>
         <div class="flex-1 flex items-center justify-center sm:items-stretch sm:justify-start">
           <div class="flex-shrink-0 flex items-center">
+            <a href="/">
             <img class="block lg:hidden h-8 w-auto" src="/public/favicon.png" alt="Logo">
             <img class="hidden lg:block h-8 w-auto" src="/public/favicon.png" alt="Logo">
+            </a>
           </div>
           <div class="hidden sm:block grow sm:ml-6">
             <div class="flex space-x-4">
               <!-- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" -->
-              <a href="/" class="{{base_nav_link_style}}{% block nav_home_style %}{% endblock %}">Home</a>
+              <a href="/dashboard" class="{{base_nav_link_style}}{% block nav_dashboard_style %}{{style_for_nav_link}}{% endblock %}">Dashboard</a>
               <a href="/calls"
-                class="{{base_nav_link_style}}{% block nav_calls_style %}{{style_for_page_link}}{% endblock %}">Calls</a>
+                class="{{base_nav_link_style}}{% block nav_calls_style %}{{style_for_nav_link}}{% endblock %}">Calls</a>
               <a href="/recordings"
-                class="{{base_nav_link_style}}{% block nav_recordings_style %}{{style_for_page_link}}{% endblock %}">Recordings</a>
+                class="{{base_nav_link_style}}{% block nav_recordings_style %}{{style_for_nav_link}}{% endblock %}">Recordings</a>
               <a href="/transcriptions"
-                class="{{base_nav_link_style}}{% block nav_transcripts_style %}{{style_for_page_link}}{% endblock %}">Transcripts</a>
+                class="{{base_nav_link_style}}{% block nav_transcripts_style %}{{style_for_nav_link}}{% endblock %}">Transcripts</a>
               <a href="/sms"
-                class="{{base_nav_link_style}}{% block nav_sms_style %}{{style_for_page_link}}{% endblock %}">SMS</a>
+                class="{{base_nav_link_style}}{% block nav_sms_style %}{{style_for_nav_link}}{% endblock %}">SMS</a>
             </div>
           </div>
           <div class="hidden sm:block sm:ml-6">

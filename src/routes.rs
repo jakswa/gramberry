@@ -1,6 +1,7 @@
 use axum::{
     async_trait,
-    extract::{FromRequest, Path, RequestParts},
+    extract::{FromRef, FromRequestParts, Path, State},
+    http::request::Parts,
     response::{IntoResponse, Redirect, Response},
     routing::{get, get_service, post},
     Form, Router,
@@ -15,15 +16,39 @@ use serde::{Deserialize, Serialize};
 
 pub mod twiml;
 
+#[derive(Clone)]
+struct AppState {
+    http_client: reqwest::Client,
+    cookie_key: CookieKey,
+}
+
+impl FromRef<AppState> for CookieKey {
+    fn from_ref(state: &AppState) -> Self {
+        state.cookie_key.clone()
+    }
+}
+
+impl FromRef<AppState> for reqwest::Client {
+    fn from_ref(state: &AppState) -> Self {
+        state.http_client.clone()
+    }
+}
+
 pub fn build() -> axum::Router {
     // wee haw
-    let key = match std::env::var("GRAMBERRY_SECRET") {
+    let cookie_key = match std::env::var("GRAMBERRY_SECRET") {
         Ok(secret) => CookieKey::from(secret[..].as_bytes()),
         _ => CookieKey::generate(),
     };
+    // an HTTP client for reuse across requests, for connection pooling :sparkles:
+    let http_client = reqwest::ClientBuilder::new()
+        // this is so SMS media redirects are not followed automatically
+        .redirect(reqwest::redirect::Policy::none())
+        .build()
+        .unwrap();
     Router::new()
-        .merge(twiml::build())
         .route("/", get(index))
+        .route("/dashboard", get(dashboard))
         .route("/calls", get(calls_index))
         .route("/calls/:call_sid/recordings", get(call_recordings_index))
         .route(
@@ -38,7 +63,11 @@ pub fn build() -> axum::Router {
         .route("/sms/:msg_sid/media", get(sms_media))
         .route("/sms/:msg_sid/media/:media_sid", get(sms_media_redirect))
         .route("/transcriptions", get(transcriptions_index))
-        .nest(
+        .with_state(AppState {
+            cookie_key,
+            http_client,
+        })
+        .nest_service(
             "/public",
             get_service(ServeDir::new("public")).handle_error(|error: std::io::Error| async move {
                 (
@@ -47,21 +76,13 @@ pub fn build() -> axum::Router {
                 )
             }),
         )
-        .layer(axum::Extension(key))
-        // an HTTP client for reuse across requests, for connection pooling :sparkles:
-        .layer(axum::Extension(
-            reqwest::ClientBuilder::new()
-                // this is so SMS media redirects are not followed automatically
-                .redirect(reqwest::redirect::Policy::none())
-                .build()
-                .unwrap(),
-        ))
+        .merge(twiml::build())
 }
 
 async fn session_create(
-    Form(payload): Form<TwilioAuth>,
-    axum::Extension(http_client): axum::Extension<reqwest::Client>,
+    State(http_client): State<reqwest::Client>,
     jar: PrivateCookieJar,
+    Form(payload): Form<TwilioAuth>,
 ) -> impl IntoResponse {
     // verify the auth is valid first.
     let account_sid = payload.account_sid;
@@ -105,14 +126,15 @@ impl IntoResponse for TwilioAuthRedirect {
 }
 
 #[async_trait]
-impl<B> FromRequest<B> for TwilioAuth
+impl<S> FromRequestParts<S> for TwilioAuth
 where
-    B: Send,
+    S: Send + Sync,
+    CookieKey: FromRef<S>,
 {
     type Rejection = TwilioAuthRedirect;
 
-    async fn from_request(req: &mut RequestParts<B>) -> Result<Self, Self::Rejection> {
-        match req.extract::<PrivateCookieJar>().await {
+    async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
+        match PrivateCookieJar::<CookieKey>::from_request_parts(parts, state).await {
             Ok(jar) => match jar.get("twauth") {
                 Some(cookie) => {
                     let auth_string = cookie.value();
@@ -170,7 +192,7 @@ fn twilio_number_for(msg: &TwilioMessage) -> String {
 
 async fn sms_index(
     twilio_auth: TwilioAuth,
-    axum::Extension(http_client): axum::Extension<reqwest::Client>,
+    State(http_client): State<reqwest::Client>,
 ) -> impl IntoResponse {
     let account_sid = twilio_auth.account_sid.clone();
     let twilio_config = TwilioConfig {
@@ -221,9 +243,9 @@ struct SmsCreateBody {
 }
 
 async fn sms_create(
-    Form(payload): Form<SmsCreateBody>,
     twilio_auth: TwilioAuth,
-    axum::Extension(http_client): axum::Extension<reqwest::Client>,
+    State(http_client): State<reqwest::Client>,
+    Form(payload): Form<SmsCreateBody>,
 ) -> impl IntoResponse {
     let account_sid = twilio_auth.account_sid.clone();
     let twilio_config = TwilioConfig {
@@ -265,10 +287,16 @@ async fn sms_create(
     }
 }
 
+async fn dashboard(maybe_auth: TwilioAuth) -> impl IntoResponse {
+    HtmlTemplate(DashboardTemplate {
+        maybe_auth: Some(maybe_auth),
+    })
+}
+
 async fn sms_media(
     Path(msg_sid): Path<String>,
     twilio_auth: TwilioAuth,
-    axum::Extension(http_client): axum::Extension<reqwest::Client>,
+    State(http_client): State<reqwest::Client>,
 ) -> impl IntoResponse {
     let account_sid = twilio_auth.account_sid.clone();
     let twilio_config = TwilioConfig {
@@ -288,7 +316,7 @@ async fn sms_media(
     .await;
     let media_list: Vec<MessageMedia> = resp.unwrap().media_list.unwrap();
     HtmlTemplate(SmsMediaTemplate {
-        media_list: media_list,
+        media_list,
         maybe_auth: Some(twilio_auth),
     })
 }
@@ -296,7 +324,7 @@ async fn sms_media(
 async fn sms_media_redirect(
     Path(sids): Path<(String, String)>,
     twilio_auth: TwilioAuth,
-    axum::Extension(http_client): axum::Extension<reqwest::Client>,
+    State(http_client): State<reqwest::Client>,
 ) -> impl IntoResponse {
     let base_path = TwilioConfig::default().base_path;
     let account_sid = twilio_auth.account_sid;
@@ -318,7 +346,7 @@ async fn sms_media_redirect(
 async fn recording_redirect(
     Path(sids): Path<(String, String)>,
     twilio_auth: TwilioAuth,
-    axum::Extension(http_client): axum::Extension<reqwest::Client>,
+    State(http_client): State<reqwest::Client>,
 ) -> impl IntoResponse {
     let base_path = TwilioConfig::default().base_path;
     let account_sid = twilio_auth.account_sid;
@@ -344,7 +372,7 @@ async fn recording_redirect(
 
 async fn calls_index(
     twilio_auth: TwilioAuth,
-    axum::Extension(http_client): axum::Extension<reqwest::Client>,
+    State(http_client): State<reqwest::Client>,
 ) -> impl IntoResponse {
     let account_sid = twilio_auth.account_sid.clone();
     let twilio_config = TwilioConfig {
@@ -379,7 +407,7 @@ async fn calls_index(
 async fn call_recordings_index(
     Path(call_sid): Path<String>,
     twilio_auth: TwilioAuth,
-    axum::Extension(http_client): axum::Extension<reqwest::Client>,
+    State(http_client): State<reqwest::Client>,
 ) -> impl IntoResponse {
     let account_sid = twilio_auth.account_sid.clone();
     let twilio_config = TwilioConfig {
@@ -400,14 +428,14 @@ async fn call_recordings_index(
     .await;
     let recording_list: Vec<CallRecording> = resp.unwrap().recordings.unwrap();
     HtmlTemplate(CallRecordingsIndexTemplate {
-        recording_list: recording_list,
+        recording_list,
         maybe_auth: Some(twilio_auth),
     })
 }
 
 async fn transcriptions_index(
     twilio_auth: TwilioAuth,
-    axum::Extension(http_client): axum::Extension<reqwest::Client>,
+    State(http_client): State<reqwest::Client>,
 ) -> impl IntoResponse {
     let account_sid = twilio_auth.account_sid.clone();
     let twilio_config = TwilioConfig {
@@ -426,7 +454,7 @@ async fn transcriptions_index(
 
 async fn recordings_index(
     twilio_auth: TwilioAuth,
-    axum::Extension(http_client): axum::Extension<reqwest::Client>,
+    State(http_client): State<reqwest::Client>,
 ) -> impl IntoResponse {
     let account_sid = twilio_auth.account_sid.clone();
     let twilio_config = TwilioConfig {
@@ -449,7 +477,7 @@ async fn recordings_index(
     .await;
     let recording_list: Vec<AccountRecording> = resp.unwrap().recordings.unwrap();
     HtmlTemplate(RecordingsIndexTemplate {
-        recording_list: recording_list,
+        recording_list,
         maybe_auth: Some(twilio_auth),
     })
 }

@@ -15,6 +15,9 @@
       📤 {{ call.to|unwrapstring }}
     {% endif %}
 
+    {% if call.caller_name|is_present_string %}
+    WEEE: {{ call.caller_name|unwrapstring }}
+    {% endif %}
     {% match call.duration %}
     {% when Some with (duration) %}
     for {{ duration }}s

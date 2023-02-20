@@ -7,8 +7,8 @@ edition = "2021"
 
 [dependencies]
 askama = "*"
-axum = "0.5"
-axum-extra = { version = "0.3", features = ["cookie-private"] }
+axum = { version = "*", features = ["macros"] }
+axum-extra = { version = "*", features = ["cookie-private"] }
 chrono = "*"
 
 # for sharing a client across twilio API calls. See src/twilio-api for more.

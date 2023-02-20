@@ -65,6 +65,12 @@ pub struct IndexTemplate {
 }
 
 #[derive(Template)]
+#[template(path = "dashboard.html")]
+pub struct DashboardTemplate {
+    pub maybe_auth: Option<TwilioAuth>,
+}
+
+#[derive(Template)]
 #[template(path = "calls_index.html")]
 pub struct CallsIndexTemplate {
     pub calls: Vec<TwilioCall>,
@@ -83,6 +89,17 @@ pub struct CallRecordingsIndexTemplate {
 pub struct RecordingsIndexTemplate {
     pub recording_list: Vec<AccountRecording>,
     pub maybe_auth: Option<TwilioAuth>,
+}
+
+struct DashboardEntry<'a> {
+    contact_number: &'a str,
+    twilio_number: &'a str,
+    comms: Vec<&'a CommItem>,
+}
+
+enum CommItem {
+    Transcription,
+    TwilioMessage,
 }
 
 #[derive(Template)]
